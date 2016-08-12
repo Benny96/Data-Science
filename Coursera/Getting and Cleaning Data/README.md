@@ -1,4 +1,4 @@
-# GettingandCleaningData: Project for Getting and Cleaning Data
+# Getting and Cleaning Data: Project for Getting and Cleaning Data
 
 Author: Benny Galdós
 
