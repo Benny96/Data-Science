@@ -1,0 +1,125 @@
+---
+title: "Statistical Inference - Project (Part I)"
+author: "Benny96"
+date: "August 12th 2016"
+output: pdf_document
+---
+
+# Simulation Exercise: Exponential Distribution.
+
+Author: Benny Galdós
+
+## Statement:
+
+In this project you will investigate the exponential distribution in R and compare it with the Central Limit Theorem. The exponential distribution can be simulated in R with rexp(n, lambda) where lambda is the rate parameter. The mean of exponential distribution is 1/lambda and the standard deviation is also 1/lambda. Set lambda = 0.2 for all of the simulations. You will investigate the distribution of averages of 40 exponentials. Note that you will need to do a thousand simulations.
+
+Illustrate via simulation and associated explanatory text the properties of the distribution of the mean of 40 exponentials. You should
+
+1.  Show the sample mean and compare it to the theoretical mean of the distribution.
+2.  Show how variable the sample is (via variance) and compare it to the theoretical variance of the distribution.
+3.  Show that the distribution is approximately normal.
+
+In point 3, focus on the difference between the distribution of a large collection of random exponentials and the distribution of a large collection of averages of 40 exponentials.
+
+## Overview:
+
+As the statement of the project indicates, the aim of this short report is to obtain further knowledge about the exponential distribution and comparing it with the CLT, based on some simulations. To do so, I will be using some of the packages R offers. The outline, considering the statement given by the instructors, will be the following:
+
+* Simulations.
+* Sample Mean vs Theoretical Mean.
+* Sample Variance vs Theoretical Variance.
+* Distribution
+
+## Simulations:
+
+Let's start loading the required libraries, variables and seed:
+
+```{r}
+library("ggplot2")
+n <- 40;lambda <- 0.2; sim <- 1000
+avgdata = NULL
+set.seed(12354)
+```
+### Plotting the data:
+
+First, we'll see what the exponential distribution looks like, plotting 1000 random exponentials.
+
+```{r}
+randomexp <- rexp(sim,lambda)
+```
+
+```{r, echo=FALSE}
+hist(randomexp)
+```
+
+Now, we'll plot "avgdata", which holds the distribution of 1000 averages of 40 random exponentials.
+
+```{r}
+for (i in 1 : sim) 
+{avgdata = c(avgdata, mean(rexp(n,lambda)))}
+```
+
+```{r, echo=FALSE}
+hist(avgdata)
+```
+
+### Reminder:
+
+According to the statement, we already know theoretically that:
+
+* Mean = 1/lambda
+* Standard deviation = 1/lambda
+* Variance = (Standard deviation)^2 = (1/lambda)^2
+
+So, we will store these values for future comparisons:
+
+```{r}
+Tmean <- 1/lambda
+Tsd <- 1/lambda
+Tvar <- (1/lambda^2)
+```
+
+Aswell as the values from the data we simulated (stored in the variable "avgdata"):
+
+```{r}
+Smean <- mean(avgdata)
+Ssd <- sd(avgdata)
+Svar <- var(avgdata)
+```
+
+## Sample Mean vs Theoretical Mean:
+
+Displaying the obtained data:
+
+```{r}
+Smean ## Mean of the chosen sample.
+Tmean ## Theoretical mean.
+```
+
+We notice that the difference is quite low. This means that in large numbers, both distributions tend to have mean 5,
+in this case.
+
+## Sample Variance vs Theoretical Variance:
+
+```{r}
+Svar ## Variance of the chosen sample.
+Tvar ## Theoretical variance.
+```
+
+However, regarding the variance, we have a big difference between them. The sample's variance is somewhere near 0.65, while the theoretical variance is 25. This is somehow explained because of the difference of distribution they show, and it just tells us that the values of the exponential distribution will be much more spread than the values obtained from the averages.
+
+## Distribution:
+
+In this case, we have to mention that even if both calculations have been originally made from randomly generated exponential numbers, the distribution of 1000 averages of 40 random exponentials is quite different. According to the CLT (Central Limit Theorem), it tends to form a Gaussian distribution. And, in fact, we can assert that it is true looking at the following histogram:
+
+```{r, echo=FALSE}
+data2 <- data.frame(avgdata)
+hist <- ggplot(data2, aes(x = avgdata)) 
+hist <- hist + geom_histogram(aes(y = ..density..), colour = "blue",
+                              fill = "red", alpha = .3,binwidth=.2)
+hist <- hist + stat_function(fun = "dnorm", args = list(mean = Tmean, sd = Tsd))
+hist <- hist + geom_vline(xintercept=Tmean,size=1)
+hist <- hist + xlab("Mean")+ylab("Frequency")
+hist
+```
+

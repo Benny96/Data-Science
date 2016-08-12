@@ -1,0 +1,121 @@
+---
+title: "Statistical Inference - Project (Part II)"
+author: "Benny96"
+date: "August 12th 2016"
+output: pdf_document
+---
+
+# Basic Inferential Data Analysis.
+
+## Statement:
+
+Now in the second portion of the project, we're going to analyze the ToothGrowth data in the R datasets package.
+
+1. Load the ToothGrowth data and perform some basic exploratory data analyses
+2. Provide a basic summary of the data.
+3. Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. (Only use the techniques from class, even if there's other approaches worth considering)
+4. State your conclusions and the assumptions needed for your conclusions.
+
+## 1. Basic exploratory data analyses:
+
+First, as we did before, let's load the required libraries and the "ToothGrowth" data:
+
+```{r}
+library(ggplot2)
+data(ToothGrowth)
+```
+
+Let's have a quick look at the data. First, let's look the first and last 6 observations:
+
+```{r}
+head(ToothGrowth)
+tail(ToothGrowth)
+```
+And now, let's see how many supplements and dose amounts appear:
+
+```{r}
+table(ToothGrowth$supp)
+table(ToothGrowth$dose)
+```
+
+## 2. Summary of the data:
+
+Let's print the summary of the data contained in ToothGrowth:
+
+```{r}
+summary(ToothGrowth)
+```
+
+We can see 3 variables here:
+
+* len: Tooth length.
+* supp: The supplement types given. (OJ and VC).
+* dose: The dose (quantity) of the aforementioned supplements (mg/day).
+
+To make the range of our data clear, let's plot the given information in various boxes, considering as a distinguishing factor the dose given to the test subjects.
+
+```{r, echo = FALSE}
+plot1 <- ggplot(ToothGrowth, aes(x =factor(dose), y = len, fill = factor(dose)))
+plot1 + geom_boxplot() + xlab("Dose") + ylab("Length")
+```
+
+So, we can see at a glance that the given dose and the tooth growth are correlated, as the higher the value of the dose gets, the bigger the growth of the teeth.
+
+## 3. Use confidence intervals and/or hypothesis tests to compare tooth growth by supp or dose.
+
+The hypothesis test we are doing is:
+
+* H0: There is no relation between tooth growth and supplements or doses.
+* Ha: There is a factual relation between tooth growth and supplements or doses.
+
+First, we'll consider a confidence interval of 95% looking to the tooth growth in the data. We'll understand the distribution as normal.
+
+```{r}
+tglength <- ToothGrowth$len
+interval <- (mean(tglength) + c(-1, 1) * qnorm(0.975) * sd(tglength)/sqrt(length(tglength)))
+interval
+```
+
+Now, we'll do a t.test (which is applicable as Student's T distribution tends to the Normal distribution in a big amount of observations).
+
+```{r}
+t.test(len~supp, data=ToothGrowth)
+```
+
+As we see, the means obtained in the OJ group and the VC group are inside the interval, so we fail to reject the Null Hypothesis.
+
+Now, we will subset the observations, classifying them by the dose (0.5|1|2):
+
+```{r}
+dose0 <- subset(ToothGrowth, dose == 0.5)
+dose1 <- subset(ToothGrowth, dose == 1)
+dose2 <- subset(ToothGrowth, dose == 2)
+```
+
+And now, we'll perform a t.test on each of the subsets:
+
+* Dose: 0.5. As the p-value is small enough, we can reject the null hypothesis.
+
+```{r}
+t.test(len~supp, data=dose0)
+```
+
+* Dose: 1. As the p-value is small enough, we can also reject the null hypothesis in this case.
+
+```{r}
+t.test(len~supp, data=dose1)
+```
+
+* Dose: 2. Now, the p-value is quite high, and it also goes out of the bounds of the interval, so we can also reject the null hypothesis.
+
+```{r}
+t.test(len~supp, data=dose2)
+```
+
+## 4. Conclusions:
+
+According to the obtained data from the t.tests, we can state that:
+
+* The Tooth Length Growth is quite related to the Supplement.
+* Orange Juice has notably a higher effect in small doses (dose = 0.5|1; due to a higher group mean), than the Vitamin C application.
+* However, the case of "big doses (dose = 2)" isn't so clear; it seems that both supplements have a similar effect in that quantity.
