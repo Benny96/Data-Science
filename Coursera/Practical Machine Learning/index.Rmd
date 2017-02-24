@@ -1,0 +1,226 @@
+---
+title: "Practical Machine Learning Course Project"
+author: "Benny96"
+date: "29 de enero de 2017"
+output: html_document
+---
+
+# Course Project Prediction.
+
+Author: Benny Galdos
+
+## Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+## Data
+
+The training data for this project are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har. If you use the document you create for this class for any purpose please cite them as they have been very generous in allowing their data to be used for this kind of assignment.
+
+## Goal
+
+The goal of your project is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. You may use any of the other variables to predict with. You should create a report describing how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases.
+
+Peer Review Portion
+
+Your submission for the Peer Review portion should consist of a link to a Github repo with your R markdown and compiled HTML file describing your analysis. Please constrain the text of the writeup to < 2000 words and the number of figures to be less than 5. It will make it easier for the graders if you submit a repo with a gh-pages branch so the HTML page can be viewed online (and you always want to make it easy on graders :-).
+
+Course Project Prediction Quiz Portion
+
+Apply your machine learning algorithm to the 20 test cases available in the test data above and submit your predictions in appropriate format to the Course Project Prediction Quiz for automated grading.
+
+## Reproducibility
+
+In order to make this project reproducible, you will need to install (and load) several packages:
+
+```{r}
+library(caret)
+library(rattle)
+library(randomForest)
+library(RColorBrewer)
+library(rpart)
+library(rpart.plot)
+library(corrplot)
+```
+
+As well as to set a seed. The seed in this project will be
+
+```{r}
+set.seed(2345)
+```
+
+
+## Submission:
+
+## 1- Obtain Data
+
+First of all, set your current working directory (via ws command or Menu > Session > Set Working Directory > Choose Directory).
+
+Now, we download the data to the specified working set:
+
+```{r}
+trainUrl <-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+testUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+trainFile <- "./data/pml-training.csv"
+testFile  <- "./data/pml-testing.csv"
+if (!file.exists("./data")) {
+  dir.create("./data")
+}
+if (!file.exists(trainFile)) {
+  download.file(trainUrl, destfile = trainFile, method = "curl")
+}
+if (!file.exists(testFile)) {
+  download.file(testUrl, destfile = testFile, method = "curl")
+}
+```
+
+In case you cannot obtain the data properly, just download the CSV files from the "Data" description above.
+
+## 2- Read Data
+
+Read the 2 downloaded CSV files and store them into 2 data frames:
+
+```{r}
+trainData <- read.csv(trainFile)
+testData <- read.csv(testFile)
+dim(trainData)
+dim(testData)
+```
+
+## 3- Clean Data
+
+After having loaded the data, we will now clean the irrelevant data (Near Zero Variance variables, unrelated data), as well as some incomplete information (NA values) to make our predictions more accurate.
+
+a) Removing Near Zero Variance variables:
+
+```{r}
+NZV <- nearZeroVar(trainData, saveMetrics = TRUE)
+training01 <- trainData[, !NZV$nzv]
+testing01 <- testData[, !NZV$nzv]
+dim(training01)
+dim(testing01)
+```
+
+b) Eliminating unrelated data:
+
+```{r}
+regex <- grepl("^X|timestamp|user_name", names(training01))
+training <- training01[, !regex]
+testing <- testing01[, !regex]
+dim(training)
+dim(testing)
+```
+
+c) Cleaning incomplete data (NA):
+
+```{r}
+cond <- (colSums(is.na(training)) == 0)
+training <- training[, cond]
+testing <- testing[, cond]
+dim(training)
+dim(testing)
+```
+
+Applying these three steps, we removed 106 out of the 160 initial variables we had. (160 -> 54)
+
+We will use a correlation plot now to check whether the remaining variables are useful or not:
+
+```{r}
+corrplot(cor(training[, -length(names(training))]), method = "color", tl.cex = 0.5)
+```
+
+## 4- Divide the Training Data set
+
+Now, we will split the training data set in 2 parts (since we already have a testing set):
+
+1- A training set (75%).
+2- A validation set (25%).
+
+```{r}
+inTrain <- createDataPartition(training$classe, p = 0.75, list = FALSE)
+validation <- training[-inTrain, ]
+training <- training[inTrain, ]
+```
+
+## 5- Creating the predictive model
+
+To generate the model, we will use 2 techniques in order to compare them. First, we will fit a model and see its accuracy (in the validation data set), and then we will do the same with the second one.
+
+### a) Decision Tree
+
+Generating the model:
+
+```{r}
+Treemodel <- rpart(classe ~ ., data = training, method = "class")
+prp(Treemodel)
+```
+
+Checking the performance of the model in the validation set:
+
+```{r}
+predictTree <- predict(Treemodel, validation, type = "class")
+confusionMatrix(validation$classe, predictTree)
+accuracy <- postResample(predictTree, validation$classe)
+ose <- 1 - as.numeric(confusionMatrix(validation$classe, predictTree)$overall[1])
+ose*100
+```
+
+Estimated accuracy:
+
+```{r}
+accuracy[1]*100
+```
+
+Estimated Out-Of-Sample Error:
+
+```{r}
+ose*100
+```
+
+### b) Random Forest
+
+Random Forests are a good combination with Decision Trees, since it automatically selects important variables and it is robust to correlated variables and outliers. In addition, we will use a 5-fold cross validation, so the variance of the true value doesn't get too big.
+
+```{r}
+modelRF <- train(classe ~ ., data = training, method = "rf", trControl = trainControl(method = "cv", 5), ntree = 250)
+modelRF
+```
+
+Checking the performance of the model in the validation set:
+
+```{r}
+predictRF <- predict(modelRF, validation)
+confusionMatrix(validation$classe, predictRF)
+accuracy <- postResample(predictRF, validation$classe)
+ose <- 1 - as.numeric(confusionMatrix(validation$classe, predictRF)$overall[1])
+```
+
+Estimated accuracy:
+
+```{r}
+accuracy[1]*100
+```
+
+Estimated Out-Of-Sample Error:
+
+```{r}
+ose*100
+```
+
+The most accurate approach between them is the Random Forest by far, and we will use it to predict the manner of exercise.
+
+## 6- Predicting the Manner of Exercise
+
+Applying the Random Forest model:
+
+```{r}
+predict(modelRF, testing[, -length(names(testing))])
+```
