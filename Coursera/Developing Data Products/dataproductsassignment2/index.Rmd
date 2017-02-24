@@ -1,0 +1,19 @@
+---
+title: "Assignment - Leaflet"
+author: "Benny96"
+output: html_document
+---
+
+# February 4, 2017
+
+Here I add a map with some nearby pseudorandom locations to my hometown:
+
+```{r, echo = FALSE}
+library(leaflet)
+df <- data.frame(lat = runif(500, min = 43.25, max = 43.35),
+                 lng = runif(500, min = -2.00, max = -1.80))
+df %>% 
+        leaflet() %>%
+        addTiles() %>%
+        addMarkers(clusterOptions = markerClusterOptions())
+```
