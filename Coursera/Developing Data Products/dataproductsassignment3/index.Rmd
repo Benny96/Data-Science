@@ -1,0 +1,14 @@
+---
+title: "Plotly Assignment"
+author: "Benny96"
+date: "February 6, 2017"
+output: ioslides_presentation
+---
+
+## Quake dataset (Fiji Earthquakes)
+
+```{r, echo = FALSE, message = FALSE, warning=FALSE}
+library(plotly)
+data("quakes")
+plot_ly(quakes, x = ~mag, y = ~stations, type = "scatter", color = ~depth)
+```
