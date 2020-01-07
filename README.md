@@ -18,4 +18,4 @@ This repo contains some scripts I developed while learning and completing [JHU's
 
 ## Special thanks:
 
-I would like to thank [Juanjo Gibaja](https://www.linkedin.com/in/juan-jos%C3%A9-gibaja-mart%C3%ADns-6435546/ "Juanjo Gibaja's LinkedIn Profile"), since he was one of the best professors I've ever had, as well as being the person who introduced me to MOOCs, which have proven to be quite useful improve my knowledge in various areas.
+I would like to thank [Juanjo Gibaja](https://www.linkedin.com/in/juan-jos%C3%A9-gibaja-mart%C3%ADns-6435546/ "Juanjo Gibaja's LinkedIn Profile"), since he was one of the best professors I've ever had, as well as being the person who introduced me to MOOCs, which have proven to be quite useful to improve my knowledge in various areas.
